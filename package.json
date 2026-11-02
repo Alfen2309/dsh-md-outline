@@ -1,0 +1,48 @@
+{
+  "name": "dsh-md-outline",
+  "version": "1.1.1",
+  "description": "Markdown outline (table of contents) plugin for DeepSeek Harness: a toolbar dropdown plus a persistent left panel with scroll highlight and draggable width.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Alfen2309 (https://github.com/Alfen2309)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alfen2309/dsh-md-outline.git"
+  },
+  "homepage": "https://github.com/Alfen2309/dsh-md-outline",
+  "bugs": {
+    "url": "https://github.com/Alfen2309/dsh-md-outline/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "markdown",
+    "outline",
+    "table-of-contents",
+    "plugin"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-sidebar-documentpreview"
+      ]
+    }
+  }
+}

@@ -1,0 +1,4 @@
+- insert:
+    - id: md-outline
+      name: 'dsh-md-outline'
+      config: {}

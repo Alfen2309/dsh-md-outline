@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Markdown Outline",
+    "description": "Adds an outline to the Markdown file preview: a dropdown from the toolbar, plus an optional always-on left panel with current-section highlight and draggable width."
+  }
+}
