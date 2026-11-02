@@ -9,6 +9,16 @@ DeepSeek Harness（DSH）Web UI 的 **Markdown 目录 / 大纲** 插件。
 
 中英双语，自动跟随 DSH 主题（明 / 暗），长文档分页加载时目录实时同步。
 
+## 预览
+
+**左侧常驻大纲**——开启后目录常驻正文左侧，滚动时自动高亮当前章节，右缘可拖拽调宽：
+
+<img src="docs/screenshot-panel.png" alt="左侧常驻大纲面板" width="760" />
+
+**工具栏目录下拉**——点击按钮弹出完整大纲，点任意标题滚动定位：
+
+<img src="docs/screenshot-dropdown.png" alt="工具栏目录下拉" width="760" />
+
 ## 功能
 
 | 功能 | 说明 |
