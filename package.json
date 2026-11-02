@@ -1,6 +1,6 @@
 {
   "name": "dsh-md-outline",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Markdown outline (table of contents) plugin for DeepSeek Harness: a toolbar dropdown plus a persistent left panel with scroll highlight and draggable width.",
   "type": "module",
   "license": "MIT",
@@ -35,7 +35,9 @@
     "icon.svg"
   ],
   "dsh": {
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "immediately": true,

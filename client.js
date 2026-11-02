@@ -95,7 +95,7 @@ window.__ModuleLoader__.load({
         '.mdo-button:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:1px}',
         '.mdo-button[aria-pressed="true"]{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-brand-primary)}',
         '.mdo-popover{position:absolute;top:calc(100% + 6px);right:0;z-index:50;box-sizing:border-box;width:300px;max-height:min(420px,60vh);display:flex;flex-direction:column;background:var(--dsw-alias-bg-overlay);border:0.5px solid var(--dsw-alias-border-l2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:6px 0 0;font-family:var(--dsw-font,sans-serif)}',
-        '.mdo-panel{position:absolute;z-index:45;box-sizing:border-box;display:flex;flex-direction:column;min-height:0;background:var(--dsw-alias-bg-layer-1);border-right:0.5px solid var(--dsw-alias-border-l2);box-shadow:2px 0 12px rgba(0,0,0,0.08);font-family:var(--dsw-font,sans-serif)}',
+        '.mdo-panel{position:absolute;z-index:45;box-sizing:border-box;display:flex;flex-direction:column;min-height:0;background:var(--dsw-alias-bg-layer-1);border-right:0.5px solid var(--dsw-alias-border-l4,var(--dsw-alias-border-l2));font-family:var(--dsw-font,sans-serif)}',
         '.mdo-header,.mdo-panel-head{flex:none;display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 12px 6px;color:var(--dsw-alias-label-secondary);font-size:12px}',
         '.mdo-panel-head{padding:10px 12px 6px;border-bottom:0.5px solid var(--dsw-alias-border-l1)}',
         '.mdo-title{font-weight:600}',
@@ -111,9 +111,15 @@ window.__ModuleLoader__.load({
         '.mdo-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}',
         '.mdo-empty{margin:0;padding:8px 12px 12px;color:var(--dsw-alias-label-secondary);font-size:12px;white-space:normal}',
         '.mdo-hint{flex:none;margin:0;padding:6px 12px 8px;color:var(--dsw-alias-label-secondary);font-size:11px;border-top:0.5px solid var(--dsw-alias-border-l1)}',
-        '.mdo-resize{position:absolute;top:0;right:-4px;width:9px;height:100%;cursor:col-resize}',
-        '.mdo-resize::after{content:"";position:absolute;top:0;bottom:0;left:4px;width:1px;background:transparent}',
-        '.mdo-resize:hover::after,.mdo-resize[data-md-outline-resizing="true"]::after{background:var(--dsw-alias-brand-primary)}',
+        /* The resize grip mirrors the docking kit's split divider: the panel's
+         * hairline (border-l4) is the seam, an 8px transparent strip centred on
+         * that seam is the pointer target (4px over each neighbour), and a 1px
+         * gradient grip — caption ink deepest at its middle, fading to both
+         * ends — fades in over it on hover and stays lit while dragging. */
+        '.mdo-resize{position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:col-resize;touch-action:none;z-index:1}',
+        '.mdo-resize::after{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 0.5px);width:1px;opacity:0;transition:opacity 120ms ease-out;background:linear-gradient(to bottom,transparent,var(--dsw-alias-label-caption,var(--dsw-alias-label-secondary)) 50%,transparent) center/1px 100% no-repeat}',
+        '@media (hover: hover){.mdo-resize:hover::after{opacity:1}}',
+        '.mdo-resize[data-md-outline-resizing="true"]::after{opacity:1}',
         /* While the persistent panel is mounted, reserve its strip in the
          * preview body so the document shifts right instead of hiding. */
         `[data-document-preview]:has([data-md-outline-panel]) [data-textpreview-body]{padding-left:${panelWidth + 12}px}`,
@@ -188,6 +194,8 @@ window.__ModuleLoader__.load({
       const initialPrefs = React.useMemo(loadPrefs, []);
       const [panelOpen, setPanelOpen] = React.useState(initialPrefs.open);
       const [width, setWidth] = React.useState(initialPrefs.width);
+      const [resizing, setResizing] = React.useState(false);
+      const resizeCleanupRef = React.useRef(null);
 
       entriesRef.current = entries;
 
@@ -226,6 +234,11 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         savePrefs({ open: panelOpen, width });
       }, [panelOpen, width]);
+
+      /* Drop an in-flight resize gesture when the entry unmounts. */
+      React.useEffect(() => () => {
+        if (resizeCleanupRef.current !== null) resizeCleanupRef.current();
+      }, []);
 
       /* Close the dropdown on outside pointer press and Escape. */
       React.useEffect(() => {
@@ -331,20 +344,42 @@ window.__ModuleLoader__.load({
         body.scrollTop = Math.max(0, Math.round(body.scrollTop + delta - 8));
       };
 
-      /** Drag the panel's right edge to resize; width persists on release. */
+      /** Drag the panel's right edge to resize, mirroring the docking kit's
+       *  split divider: capture the pointer so a scroll container the pointer
+       *  crosses cannot claim the gesture, follow it on the window, and keep
+       *  the grip lit through `data-md-outline-resizing` until release. */
       const startResize = (event) => {
         if (event.button !== undefined && event.button !== 0) return;
+        const element = event.currentTarget;
+        const pointerId = event.pointerId;
         const startX = event.clientX;
         const startWidth = width;
+        if (typeof element.setPointerCapture === 'function') element.setPointerCapture(pointerId);
+        const own = (pointerEvent) => pointerEvent.pointerId === pointerId;
         const onMove = (moveEvent) => {
+          if (!own(moveEvent)) return;
           setWidth(clampWidth(startWidth + (moveEvent.clientX - startX)));
         };
-        const onUp = () => {
+        const onUp = (upEvent) => {
+          if (!own(upEvent)) return;
+          stop();
+        };
+        const onCancel = (cancelEvent) => {
+          if (!own(cancelEvent)) return;
+          stop();
+        };
+        const stop = () => {
           window.removeEventListener('pointermove', onMove);
           window.removeEventListener('pointerup', onUp);
+          window.removeEventListener('pointercancel', onCancel);
+          resizeCleanupRef.current = null;
+          setResizing(false);
         };
+        resizeCleanupRef.current = stop;
+        setResizing(true);
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onCancel);
         event.preventDefault();
       };
 
@@ -427,6 +462,7 @@ window.__ModuleLoader__.load({
             'aria-orientation': 'vertical',
             'aria-label': t('resize.aria'),
             'data-md-outline-resize': 'true',
+            'data-md-outline-resizing': resizing ? 'true' : undefined,
             onPointerDown: startResize,
           })));
     }
