@@ -1,5 +1,7 @@
 # dsh-md-outline
 
+中文 | [English](README.en.md)
+
 DeepSeek Harness（DSH）Web UI 的 **Markdown 目录 / 大纲** 插件。
 
 打开 `.md` / `.markdown` 文件预览时，在工具栏提供两种快速导航方式：
@@ -35,20 +37,41 @@ DeepSeek Harness（DSH）Web UI 的 **Markdown 目录 / 大纲** 插件。
 
 前提：DSH 桌面版或 `dsh` 0.2.x（内置 `@deepseek-ai/dsh-client-ui-sidebar-documentpreview` 插件，默认启用）。
 
-1. 克隆仓库到任意目录：
+### 方式一：直接从 GitHub 安装（推荐）
 
-   ```powershell
-   git clone https://github.com/Alfen2309/dsh-md-outline.git
-   ```
+```powershell
+dsh plugin --profile desktop add github:Alfen2309/dsh-md-outline
+```
 
-2. 在 DSH 中安装这个本地插件包。把克隆下来的目录路径告诉 DSH Agent，例如：
+`dsh plugin` 是 pnpm 的薄封装：安装依赖的同时会自动把该 bundle 加入 profile 的激活列表（`dsh.profile.bundles`）。
+安装后刷新一次页面（F5）即可看到按钮；若未生效，重启 DSH。
 
-   > 帮我安装本地插件包：`C:\path\to\dsh-md-outline`
+> profile 名不是 `desktop` 时换成自己的：`dsh plugin --profile <name> add ...`
 
-   Agent 会通过 `plugin_manager` 的 `install_bundle` 把该目录链接进当前 profile。
-   安装完成后刷新一次页面（F5）即可看到按钮；若未生效，重启 DSH。
+### 方式二：克隆后本地安装
 
-3. 打开任意 `.md` 文件预览，工具栏出现目录按钮。
+```powershell
+git clone https://github.com/Alfen2309/dsh-md-outline.git
+dsh plugin --profile desktop add C:\path\to\dsh-md-outline
+```
+
+### 方式三：让 DSH Agent 安装
+
+> 帮我安装本地插件包：`C:\path\to\dsh-md-outline`
+
+### 更新
+
+```powershell
+dsh plugin --profile desktop update dsh-md-outline
+```
+
+### 卸载
+
+```powershell
+dsh plugin --profile desktop remove dsh-md-outline
+```
+
+安装后打开任意 `.md` 文件预览，工具栏出现目录按钮。
 
 ## 使用
 
